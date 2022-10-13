@@ -3,3 +3,6 @@ gunicorn
 flask_cors
 requests
 Flask-Session
+cryptography
+pycryptodome
+ecdsa
