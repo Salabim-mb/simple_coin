@@ -12,6 +12,8 @@ unpad = lambda s: s[:-ord(s[len(s) - 1:])]
 
 class IdentityLocal:
     def __init__(self):
+        self.name = None
+        self.address = None
         self.pub_key = None
         self.priv_key = None
 
@@ -20,6 +22,7 @@ class IdentityLocal:
         Create pair of SSH keys ciphrated with ECDSA algorithm
         :return: None
         """
+        # TODO check if credentials exist in file, if not -- generate pair of keys for further encryption
         return
 
     def encrypt_key(self, raw: str, password: str, salt: str) -> bytes:
@@ -62,3 +65,7 @@ class IdentityLocal:
         pbkdf2 = PBKDF2(password, salt, 64, 1000)
         key = pbkdf2[:32]
         return key
+
+    def set_node_basic_data(self, node_name, port):
+        self.name = node_name
+        self.address = "http://127.0.0.1:" + port
