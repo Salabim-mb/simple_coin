@@ -68,4 +68,4 @@ class IdentityLocal:
 
     def set_node_basic_data(self, node_name, port):
         self.name = node_name
-        self.address = "http://127.0.0.1:" + port
+        self.address = "http://127.0.0.1:" + str(port)
