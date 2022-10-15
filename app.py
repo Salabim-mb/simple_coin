@@ -51,6 +51,6 @@ def update_list():
 if __name__ == '__main__':
     node_name, port = parse_args(sys.argv)
     id_local.set_node_basic_data(node_name, port)
-    id_local.generate_ssh_pair()
+    id_local.get_ssh_pair()
     id_remote.update_list()
     app.run(port=port)

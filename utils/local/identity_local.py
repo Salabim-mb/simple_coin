@@ -1,6 +1,7 @@
 from Crypto.Protocol.KDF import PBKDF2
 from Crypto.Cipher import AES
 from Crypto import Random
+from ecdsa import SigningKey
 import base64
 
 # snippet from https://www.quickprogrammingtips.com/python/aes-256-encryption-and-decryption-in-python.html
@@ -17,12 +18,39 @@ class IdentityLocal:
         self.pub_key = None
         self.priv_key = None
 
-    def generate_ssh_pair(self) -> None:
+    def get_ssh_pair(self) -> (str, str):
+        try:
+            with open(f"keys/{self.name}.pub", "r") as f:
+                self.pub_key = f.read().encode()
+            with open(f"keys/{self.name}.priv", "r") as f:
+                priv_key_encrypted = f.read()
+                self.priv_key = self.decrypt_key(priv_key_encrypted, "password", "12345678")
+        except OSError:
+            print(f"Key pair {self.name}.pub and {self.name}.key not found, generating new pair...")
+            self.__generate_ssh_pair()
+
+    def __generate_ssh_pair(self) -> None:
         """
-        Create pair of SSH keys ciphrated with ECDSA algorithm
+        [PRIVATE METHOD] Create pair of SSH keys ciphrated with ECDSA algorithm
         :return: None
         """
         # TODO check if credentials exist in file, if not -- generate pair of keys for further encryption
+        priv_key = SigningKey.generate()
+        pub_key = priv_key.verifying_key
+        priv_key_encrypted = self.encrypt_key(priv_key.to_pem().decode(), "password", "12345678") # TODO how to store pass and salt? env?
+        try:
+            with open(f"./keys/{self.name}.pub", "w") as f:
+                f.write(pub_key.to_pem().decode())
+            with open(f"./keys/{self.name}.priv", "w") as f:
+                f.write(priv_key_encrypted.decode())
+        except OSError:
+            print(
+                "Could not write newly generated keys to files. Make sure you have the correct access rights.",
+                "The program will now exit."
+            )
+            exit(1)
+        self.pub_key = pub_key
+        self.priv_key = priv_key
         return
 
     def encrypt_key(self, raw: str, password: str, salt: str) -> bytes:
@@ -39,7 +67,6 @@ class IdentityLocal:
         cipher = AES.new(private_key, AES.MODE_CBC, iv)
         return base64.b64encode(iv + cipher.encrypt(raw.encode('utf-8')))
 
-    # TODO redundant?
     def decrypt_key(self, c_text: str, password: str, salt: str) -> str:
         """
         Decrypt private key with AES algorithm
