@@ -1,34 +1,20 @@
 import requests
+from utils.general.general import filter_array_unique_by_param
 
-initial_node_list = [
-    {
-        "name": "5002",
-        "address": "http://127.0.0.1:5002",
-        "pub_key": "smth2" # TODO add initial pub key from some file
-    },
-    {
-        "name": "5003",
-        "address": "http://127.0.0.1:5003",
-        "pub_key": "smth3" # TODO add initial pub key from some file
-    },
-    {
-        "name": "5004",
-        "address": "http://127.0.0.1:5004",
-        "pub_key": "smth4" # TODO add initial pub key from some file
-    }
-]
+LOCAL_ADDRESS = "http://127.0.0.1"
+searchable_port_suf = range(5001, 5011)     # Port range to search addresses
 
 
 class IdentityRemote:
     def __init__(self):
-        self.node_list: [] = initial_node_list   # only public keys are stored - those are the base for authentication
+        self.node_list: [] = []   # only public keys are stored - those are the base for authentication
 
     def print_node_list(self) -> None:
         """
         Prints list of nodes in blockchain
         :return:
         """
-        print(self.node_list)
+        print("Current node list:", self.node_list)
 
     def update_list(self) -> None:
         """
@@ -36,23 +22,29 @@ class IdentityRemote:
         :return:
         """
         for node in self.node_list:
+            host = node['address']
             try:
-                response = requests.get(url=(node["address"] + "/fetch-node-list"))
-                self.node_list = response.json()
+                response = requests.get(url=(host + "/fetch-node-list"))
+                print(f"Found node with url {host}.")
+                self.node_list = filter_array_unique_by_param(self.node_list, response.json(), 'name')
                 break
             except Exception as e:
-                print(f"error with node {node['name']}, error {str(e)}")
+                print(f"Error with node {host}, couldn't find active target host. {str(e)}")
 
-    def register_node_in_blockchain(self, request: {}) -> None:
+    def register_node_in_blockchain(self, item: {} = None) -> None:
         """
         Add new node to blockchain and broadcast updated list of nodes to other nodes to let them update it too
-        :param request:
+        :param item: Node to append and broadcast through network
         :return:
         """
-        item = request.json
-        self.node_list.append(item)
-        for node in self.node_list:
+        if item is not None:
+            self.node_list.append(item)
+        for port in searchable_port_suf:
+            host = f"{LOCAL_ADDRESS}:{port}"
+            if host == item['address']:
+                continue
             try:
-                requests.post(url=(node["address"] + "/update-node-list"), json=self.node_list)
+                res = requests.post(url=(host + "/update-node-list"), json=self.node_list)
+                self.node_list = filter_array_unique_by_param(self.node_list, res.json(), 'name')
             except Exception as e:
-                print(f"error with node {node['name']}, error {str(e)}")
+                print(f"Error with node {host}, couldn't find active target host. {str(e)}")
