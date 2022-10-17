@@ -50,13 +50,13 @@ def manage_message():
 
 
 # Endpoints for external use, like testing or postman requesting
-@app.route('/proxy/register-node', methods=['POST'])
+@app.route('/register-node', methods=['POST'])
 def register_node():
     id_remote.register_node_in_blockchain(request.json)
     return "ok"
 
 
-@app.route('/proxy/forward-message/<target_port>', methods=["POST"])
+@app.route('/proxy/forward-message/<target_port>', methods=["GET"])
 def forward_message(target_port):
     target_host = f"{LOCAL_ADDRESS}:{target_port}"
     try:

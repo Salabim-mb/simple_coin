@@ -5,6 +5,12 @@ class GeneralUtil:
 
     @staticmethod
     def parse_args(argv) -> (int, int):
+        """
+        Static method for parsing application input arguments.
+        2 arguments for node name and port are required.
+        :param argv:
+        :return:
+        """
         if len(argv) is not ARG_NUM:
             print(f"Number of arguments must equal {ARG_NUM - 1}")
         return int(argv[1]), int(argv[2])
@@ -26,6 +32,12 @@ class GeneralUtil:
 
     @staticmethod
     def get_sample_message(id_local, sign_message) -> (str, str):
-        message = f"test message from node {id_local.name}, {id_local.address}"
+        """
+        Creates sample message with its signature
+        :param id_local:
+        :param sign_message:
+        :return:
+        """
+        message = f"test message from node {id_local.name} (address: {id_local.address})"
         signature = sign_message(message, id_local.priv_key).decode('ISO-8859-1')
         return message, signature

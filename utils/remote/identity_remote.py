@@ -44,7 +44,7 @@ class IdentityRemote:
             if host == item['address']:
                 continue
             try:
-                res = requests.post(url=(host + "/update-node-list"), json=self.node_list)
-                self.node_list = GeneralUtil.filter_array_unique_by_param(self.node_list, res.json(), 'name')
+                response = requests.post(url=(host + "/update-node-list"), json=self.node_list)
+                self.node_list = response.json()
             except Exception as e:
                 print(f"Error with node {host}, couldn't find active target host. {str(e)}")
