@@ -111,5 +111,5 @@ class IdentityLocal:
         return {
             'name': self.name,
             'address': self.address,
-            'pub_key': self.pub_key.to_pem().decode()
+            'pub_key': base64.b64encode(self.pub_key.to_string()).decode()
         }
