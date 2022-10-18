@@ -1,15 +1,14 @@
 from ecdsa import SigningKey, VerifyingKey
-import requests
 
 
-def sign_message(message: str, priv_key: SigningKey) -> str:
+def sign_message(message: str, priv_key: SigningKey) -> bytes:
     """
     Signs string with private key
     :param message: Text to sign
     :param priv_key: Private key
     :return: Signed message string
     """
-    signature = priv_key.sign(message.encode()).decode()
+    signature = priv_key.sign(message.encode())
     return signature
 
 
@@ -20,11 +19,13 @@ def verify_sender(key_list: [], pub_key: str) -> bool:
     :param pub_key: current sender's public key
     :return: True if sender's key is present in the array, otherwise false
     """
+    for node in key_list:
+        if node['pub_key'] == pub_key:
+            return True
+    return False
 
-    return len(list(filter(lambda x: x['pub_key'] == pub_key, key_list))) > 0
 
-
-def check_if_message_authentic(message: str, signature: str, key: str) -> bool:
+def check_if_message_authentic(message: str, signature: str, key: bytes) -> bool:
     """
     Check if message sent is authored by specified host
     :param message: String that needs authentication
@@ -32,5 +33,5 @@ def check_if_message_authentic(message: str, signature: str, key: str) -> bool:
     :param key: public_key to check with
     :return: True if message is coming from specified sender
     """
-    vk = VerifyingKey.from_pem(key)
-    return vk.verify(signature, message)
+    vk = VerifyingKey.from_string(key)
+    return vk.verify(signature.encode('ISO-8859-1'), message.encode())

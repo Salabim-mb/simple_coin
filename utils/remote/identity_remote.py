@@ -1,5 +1,5 @@
 import requests
-from utils.general.general import filter_array_unique_by_param
+from utils.general.general import GeneralUtil
 
 LOCAL_ADDRESS = "http://127.0.0.1"
 searchable_port_suf = range(5001, 5011)     # Port range to search addresses
@@ -26,7 +26,7 @@ class IdentityRemote:
             try:
                 response = requests.get(url=(host + "/fetch-node-list"))
                 print(f"Found node with url {host}.")
-                self.node_list = filter_array_unique_by_param(self.node_list, response.json(), 'name')
+                self.node_list = GeneralUtil.filter_array_unique_by_param(self.node_list, response.json(), 'name')
                 break
             except Exception as e:
                 print(f"Error with node {host}, couldn't find active target host. {str(e)}")
@@ -45,6 +45,6 @@ class IdentityRemote:
                 continue
             try:
                 res = requests.post(url=(host + "/update-node-list"), json=self.node_list)
-                self.node_list = filter_array_unique_by_param(self.node_list, res.json(), 'name')
+                self.node_list = GeneralUtil.filter_array_unique_by_param(self.node_list, res.json(), 'name')
             except Exception as e:
                 print(f"Error with node {host}, couldn't find active target host. {str(e)}")
