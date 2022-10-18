@@ -20,7 +20,11 @@ class IdentityLocal:
         self.priv_key = None
         self.salt = None
 
-    def get_ssh_pair(self) -> (str, str):
+    def get_ssh_pair(self) -> None:
+        """
+        Read a pair of public and private key from files
+        :return:
+        """
         try:
             with open(f"keys/{self.name}.pub", "r") as f:
                 self.pub_key = VerifyingKey.from_pem(f.read())
@@ -60,9 +64,9 @@ class IdentityLocal:
     def encrypt_key(self, raw: str, password: str, salt: str) -> bytes:
         """
         Encrypt private key with AES algorithm
-        :param raw:
-        :param password:
-        :param salt:
+        :param raw: raw string to encrypt
+        :param password: super duper secret string that is a base for AES algorithm
+        :param salt: random string based on a node name
         :return: Ciphertext with SSH key
         """
         private_key = self.get_key(password, salt)
@@ -74,9 +78,9 @@ class IdentityLocal:
     def decrypt_key(self, c_text: str, password: str, salt: str) -> str:
         """
         Decrypt private key with AES algorithm
-        :param c_text:
-        :param password:
-        :param salt:
+        :param c_text: ciphertext containing private key
+        :param password: super duper secret string that is a base for AES algorithm
+        :param salt: random string based on a node name
         :return: Plaintext with SSH key
         """
         private_key = self.get_key(password, salt)
@@ -89,15 +93,21 @@ class IdentityLocal:
     def get_key(password, salt) -> (int, bytes):
         """
 
-        :param password:
-        :param salt:
-        :return:
+        :param password: base for PBKDF2 algorithm hash
+        :param salt: random string based on a node name
+        :return: Tuple containing key to encrypt with AES
         """
         pbkdf2 = PBKDF2(password, salt, 64, 1000)
         key = pbkdf2[:32]
         return key
 
     def set_node_basic_data(self, node_name, port):
+        """
+        Setter for data filled upon creation
+        :param node_name: unique name of the node in network
+        :param port: port number on which the server is operating
+        :return:
+        """
         self.name = node_name
         self.address = "http://127.0.0.1:" + str(port)
         random.seed(node_name)

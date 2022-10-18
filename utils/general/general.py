@@ -1,15 +1,16 @@
+from utils.local.identity_local import IdentityLocal
+
 ARG_NUM = 3
 
 
 class GeneralUtil:
 
     @staticmethod
-    def parse_args(argv) -> (int, int):
+    def parse_args(argv: []) -> (int, int):
         """
-        Static method for parsing application input arguments.
-        2 arguments for node name and port are required.
-        :param argv:
-        :return:
+        Execution params parser
+        :param argv: list of execution params
+        :return: node name and port
         """
         if len(argv) is not ARG_NUM:
             print(f"Number of arguments must equal {ARG_NUM - 1}")
@@ -31,13 +32,13 @@ class GeneralUtil:
         return new_acc
 
     @staticmethod
-    def get_sample_message(id_local, sign_message) -> (str, str):
+    def get_sample_message(id_local: IdentityLocal, sign_message: classmethod) -> (str, str):
         """
-        Creates sample message with its signature
-        :param id_local:
-        :param sign_message:
-        :return:
+        Mock for providing message to post to remote host
+        :param id_local: instance of ItentityLocal class,
+        :param sign_message: method to create digital signature
+        :return: example message and its signature
         """
-        message = f"test message from node {id_local.name} (address: {id_local.address})"
+        message = f"test message from node {id_local.name}, {id_local.address}"
         signature = sign_message(message, id_local.priv_key).decode('ISO-8859-1')
         return message, signature
