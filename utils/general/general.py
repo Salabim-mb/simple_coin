@@ -1,4 +1,4 @@
-from utils.local.identity_local import IdentityLocal
+from utils.node import Node
 
 ARG_NUM = 3
 
@@ -32,13 +32,13 @@ class GeneralUtil:
         return new_acc
 
     @staticmethod
-    def get_sample_message(id_local: IdentityLocal, sign_message: classmethod) -> (str, str):
+    def get_sample_message(node: Node, sign_message: classmethod) -> (str, str):
         """
-        Mock for providing message to post to remote host
-        :param id_local: instance of ItentityLocal class,
+        Mock for providing message to post to messenger host
+        :param node: instance of ItentityLocal class,
         :param sign_message: method to create digital signature
         :return: example message and its signature
         """
-        message = f"test message from node {id_local.name}, {id_local.address}"
-        signature = sign_message(message, id_local.priv_key).decode('ISO-8859-1')
+        message = f"test message from node {node.name}, {node.address}"
+        signature = sign_message(message, node.priv_key).decode('ISO-8859-1')
         return message, signature
