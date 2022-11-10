@@ -15,7 +15,7 @@ app.config['CORS_ALLOW_HEADERS'] = '*'
 app.config['CORS_ORIGINS'] = '*'
 CORS(app)
 
-node = Node()
+node = None
 
 LOCAL_ADDRESS = "http://127.0.0.1"
 
@@ -40,7 +40,7 @@ def manage_message():
         else:
             return Response(status=403)
     elif request.method == "GET":
-        message, signature = GeneralUtil.get_sample_message(node, sign_message)
+        message, signature = GeneralUtil.generate_message_with_signature(node)
         return make_response({
             'message': message,
             'signature': signature
@@ -58,7 +58,7 @@ def register_node():
 def forward_message(target_port):
     target_host = f"{LOCAL_ADDRESS}:{target_port}"
     try:
-        message, signature = GeneralUtil.get_sample_message(node, sign_message)
+        message, signature = GeneralUtil.generate_message_with_signature(node)
         res = requests.post(url=target_host + "/message", json={
             'message': message,
             'signature': signature
@@ -99,8 +99,5 @@ def hello_world():
 
 if __name__ == '__main__':
     node_name, port = GeneralUtil.parse_args(sys.argv)
-    node.set_node_basic_data(node_name, port)
-    node.get_ssh_pair()
-    node.register_node_in_blockchain(node.get_data_to_send())
-    node.update_list()
+    node = Node(node_name, port)
     app.run(port=port)

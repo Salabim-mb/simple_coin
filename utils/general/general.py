@@ -1,4 +1,5 @@
-from utils.node import Node
+from utils.messenger.messenger import sign_message
+import datetime
 
 ARG_NUM = 3
 
@@ -32,13 +33,12 @@ class GeneralUtil:
         return new_acc
 
     @staticmethod
-    def get_sample_message(node: Node, sign_message: classmethod) -> (str, str):
+    def generate_message_with_signature(node) -> (str, str):
         """
         Mock for providing message to post to messenger host
         :param node: instance of ItentityLocal class,
-        :param sign_message: method to create digital signature
         :return: example message and its signature
         """
-        message = f"test message from node {node.name}, {node.address}"
+        message = f"test message from node {node.name}, {node.address}, created at {datetime.datetime.now()}"
         signature = sign_message(message, node.priv_key).decode('ISO-8859-1')
         return message, signature
