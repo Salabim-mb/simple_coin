@@ -4,6 +4,8 @@ import json
 from flask import Flask, request, Response, make_response, jsonify
 from flask_cors import CORS
 import base64
+from utils.block import Block
+from utils.block_header import BlockHeader
 
 from utils.general.general import GeneralUtil
 from utils.node import Node
@@ -35,7 +37,8 @@ def manage_message():
         data = json.loads(request.get_data().decode())
         if verify_sender(node.node_list, sender_pub_key) \
                 and check_if_message_authentic(data['message'], data['signature'], base64.b64decode(sender_pub_key.encode())):
-            print(f"Message from {request.headers.get('Origin')}: {data['message']}")
+            node.transaction_pool.append(data)
+            print(f"Message from {request.headers.get('Origin')}: \"{data['message']}\" was added to transaction pool")
             return Response(status=200)
         else:
             return Response(status=403)
@@ -48,7 +51,7 @@ def manage_message():
 
 
 # Endpoints for external use, like testing or postman requesting
-@app.route('/register-node', methods=['POST'])
+@app.route('/register-node-frontend', methods=['POST'])
 def register_node():
     node.register_node_in_blockchain(request.json)
     return Response(status=200)
@@ -76,7 +79,7 @@ def forward_message(target_port):
 
 @app.route('/fetch-node-list', methods=['GET'])
 def fetch_node_list():
-    res_list = GeneralUtil.filter_array_unique_by_param(node.node_list, [node.get_data_to_send()], 'name')
+    res_list = GeneralUtil.generate_unique_node_list(node.node_list, [node.get_data_to_send()])
     return make_response(jsonify(res_list))
 
 
@@ -86,10 +89,21 @@ def print_node_list():
     return Response(status=200)
 
 
-@app.route('/update-node-list', methods=['POST'])
+@app.route('/register-node', methods=['POST'])
 def update_list():
-    node.node_list = GeneralUtil.filter_array_unique_by_param(node.node_list, request.json, 'name')
+    node.node_list = GeneralUtil.generate_unique_node_list(node.node_list, request.json)
     return make_response(jsonify(node.node_list))
+
+
+@app.route('/candidate-block', methods=['POST'])
+def candidate_block():
+    candidate_block_data = json.loads(request.get_data().decode())
+    if node.miner.verify_candidate_block():
+        new_block_header = BlockHeader()
+        new_block_header.nonce = candidate_block_data["header"]["nonce"]
+        new_block_header.previous_block_hash = candidate_block_data["header"]["previous_block_hash"]
+        new_block = Block(new_block_header, candidate_block_data["transactions"])
+        node.blockchain.blocks.append(new_block)
 
 
 @app.route("/")

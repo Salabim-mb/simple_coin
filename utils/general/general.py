@@ -18,19 +18,18 @@ class GeneralUtil:
         return int(argv[1]), int(argv[2])
 
     @staticmethod
-    def filter_array_unique_by_param(acc: [], to_add: [], param_name: str) -> []:
+    def generate_unique_node_list(node_list: [], nodes_fetched_to_add: []) -> []:
         """
         Appends to array if new unique values are provided
-        :param acc: array to append to
-        :param to_add: array of objects that need to be appended
-        :param param_name: parameter name that should be unique
+        :param node_list: array to append to
+        :param nodes_fetched_to_add: array of objects that need to be appended
         :return: joined arrays with unique values
         """
-        new_acc = acc
-        for node in to_add:
-            new_acc = [n for n in new_acc if n[param_name] != node[param_name]]
-            new_acc.append(node)
-        return new_acc
+        updated_node_list = node_list
+        for node in nodes_fetched_to_add:
+            updated_node_list = [n for n in updated_node_list if n["name"] != node["name"]]
+            updated_node_list.append(node)
+        return updated_node_list
 
     @staticmethod
     def generate_message_with_signature(node) -> (str, str):

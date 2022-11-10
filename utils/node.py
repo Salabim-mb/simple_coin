@@ -5,9 +5,8 @@ from ecdsa import SigningKey, VerifyingKey
 import base64
 import random
 import requests
-from utils.general.general import GeneralUtil
 from utils.message_generator import MessageGenerator
-from utils.miner import Miner
+from utils.blockchain import Blockchain
 
 # snippet from https://www.quickprogrammingtips.com/python/aes-256-encryption-and-decryption-in-python.html
 BLOCK_SIZE = 16
@@ -22,16 +21,17 @@ class Node:
     def __init__(self, node_name, port):
         self.name = node_name
         self.address = "http://127.0.0.1:" + str(port)
-        self.node_list: [] = []  # only public keys are stored - those are the base for authentication
+        self.node_list: [] = []
+        self.transaction_pool: [] = []
         random.seed(node_name)
         self.salt = str(random.random())[2:10].encode()
         self.pub_key, self.priv_key = self.get_ssh_pair()
 
         self.register_node_in_blockchain(self.get_data_to_send())
-        self.update_list()
 
+        self.blockchain = Blockchain(self)
         self.message_generator = MessageGenerator(self)
-        self.miner = Miner()
+        # self.miner = Miner(self)
 
     def get_ssh_pair(self):
         """
@@ -64,10 +64,11 @@ class Node:
             with open(f"./keys/{self.name}.priv", "w") as f:
                 f.write(priv_key_encrypted.decode())
                 print(f"SSH identity created. Files {self.name}.pub and {self.name}.priv were created.")
-        except OSError:
+        except OSError as e:
             print(
                 "Could not write newly generated keys to files. Make sure you have the correct access rights. ",
-                "The program will now exit."
+                "The program will now exit.",
+                str(e)
             )
             exit(1)
         return pub_key, priv_key
@@ -130,21 +131,6 @@ class Node:
         """
         print("Current node list:", self.node_list)
 
-    def update_list(self) -> None:
-        """
-        Update list of nodes by fetching it from other nodes. Used after app startup
-        :return:
-        """
-        for node in self.node_list:
-            host = node['address']
-            try:
-                response = requests.get(url=(host + "/fetch-node-list"))
-                print(f"Found node with url {host}.")
-                self.node_list = GeneralUtil.filter_array_unique_by_param(self.node_list, response.json(), 'name')
-                break
-            except Exception as e:
-                print(f"Error with node {host}, couldn't find active target host. {str(e)}")
-
     def register_node_in_blockchain(self, item: {} = None) -> None:
         """
         Add new node to blockchain and broadcast updated list of nodes to other nodes to let them update it too
@@ -158,7 +144,7 @@ class Node:
             if host == item['address']:
                 continue
             try:
-                response = requests.post(url=(host + "/update-node-list"), json=self.node_list)
+                response = requests.post(url=(host + "/register-node"), json=self.node_list)
                 self.node_list = response.json()
             except Exception as e:
                 print(f"Error with node {host}, couldn't find active target host. {str(e)}")
