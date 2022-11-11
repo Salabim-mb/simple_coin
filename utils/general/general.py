@@ -32,7 +32,7 @@ class GeneralUtil:
         return new_acc
 
     @staticmethod
-    def get_sample_message(id_local: IdentityLocal, sign_message: classmethod) -> (str, str):
+    def get_sample_message(id_local: IdentityLocal, sign_message) -> (str, str):
         """
         Mock for providing message to post to remote host
         :param id_local: instance of ItentityLocal class,
