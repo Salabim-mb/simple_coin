@@ -7,6 +7,7 @@ import random
 import requests
 from utils.message_generator import MessageGenerator
 from utils.blockchain import Blockchain
+from utils.miner import Miner
 
 # snippet from https://www.quickprogrammingtips.com/python/aes-256-encryption-and-decryption-in-python.html
 BLOCK_SIZE = 16
@@ -31,7 +32,7 @@ class Node:
 
         self.blockchain = Blockchain(self)
         self.message_generator = MessageGenerator(self)
-        # self.miner = Miner(self)
+        self.miner = Miner(self)
 
     def get_ssh_pair(self):
         """

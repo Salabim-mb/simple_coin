@@ -6,6 +6,7 @@ import hashlib
 from utils.proof_of_work import proof_of_work
 import requests
 import base64
+max_nonce = 2 ** 32 # 4 billion
 
 
 class Miner:
@@ -41,7 +42,9 @@ class Miner:
         candidate_block_header = BlockHeader()
         candidate_block_header.previous_block_hash = last_block_hash
         candidate_block = Block(candidate_block_header, self.node.transaction_pool)
-        nonce = proof_of_work(candidate_block, self.difficulty_bits)
+        nonce = self.proof_of_work(candidate_block)
+        if nonce == -1:
+            return
         candidate_block.header.nonce = nonce
         print("Candidate block" + str(candidate_block.as_json()))
         return candidate_block
@@ -51,4 +54,21 @@ class Miner:
         hash_result = hashlib.sha256(str(candidate_block.as_json()).encode('utf-8')).hexdigest()
         # check if this is a valid result, below the target
         return int(hash_result, 16) < target
+
+    def proof_of_work(self, block: Block):
+        # calculate the difficulty target
+        target = 2 ** (256 - self.difficulty_bits)
+        print("Started proof of work")
+        for nonce in range(max_nonce):
+            if self.reset:
+                return -1
+            block.header.nonce = nonce
+            hash_result = hashlib.sha256(str(block.as_json()).encode('utf-8')).hexdigest()
+            # check if this is a valid result, below the target
+            if int(hash_result, 16) < target:
+                print(f"Success with nonce {nonce}")
+                print(f'Hash is {hash_result}')
+                return nonce
+        print(f'Failed after {nonce} tries')
+        return nonce
 
