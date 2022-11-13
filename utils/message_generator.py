@@ -1,7 +1,7 @@
 import time
 import base64
 from utils.general.general import GeneralUtil
-import threading
+from multiprocessing import Process
 import requests
 
 from utils.node import Node
@@ -14,12 +14,12 @@ class MessageGenerator:
 
     def __init__(self, node: Node):
         self.node = node
-        generator_thread = threading.Thread(name="message_generator", target=self.generate_messages)
+        generator_thread = Process(name="message_generator", target=self.__generate_messages)
         generator_thread.start()
 
-    def generate_messages(self) -> None:
+    def __generate_messages(self) -> None:
         """
-        'Broadcast' test message by looping over node list
+        [PRIVATE METHOD] 'Broadcast' test message by looping over node list
         :return:
         """
         while True:

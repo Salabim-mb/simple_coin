@@ -1,4 +1,4 @@
-import threading
+from multiprocessing import Process, Queue
 import time
 from utils.block_header import BlockHeader
 from utils.block import Block
@@ -19,12 +19,21 @@ class Miner:
         self.difficulty_bits = 5
         self.node = node
         self.reset = False
-        miner_thread = threading.Thread(name='miner_thread', target=self.mine)
+        self.queue = Queue()
+        time.sleep(10)  # wait 10 secs before starting to mine
+        self.__run()
+
+    def __run(self) -> None:
+        """
+        [PRIVATE METHOD] Worker for maintaining a multiprocess mining
+        :return:
+        """
+        miner_thread = Process(name='miner_thread', target=self.__mine)
         miner_thread.start()
 
-    def mine(self) -> None:
+    def __mine(self) -> None:
         """
-        Infinitely running function calculating complex hashes used for mining cryptocurrency
+        [PRIVATE METHOD] Infinitely running function calculating complex hashes used for mining cryptocurrency
         :return:
         """
         time.sleep(10)
@@ -34,8 +43,7 @@ class Miner:
             if self.reset:
                 continue
             for external_node in self.node.node_list:
-                if external_node['name'] == self.node.name:
-                    continue
+                # send to everyone, including self
                 host = external_node['address']
                 try:
                     requests.post(url=host + "/candidate-block", json=candidate_block.as_json(), headers={

@@ -98,7 +98,9 @@ def update_list():
 @app.route('/candidate-block', methods=['POST'])
 def candidate_block():
     candidate_block_data = json.loads(request.get_data().decode())
-    if node.miner.verify_candidate_block():
+    incoming_host = request.headers['Origin']
+    # skip verification if sender and receiver are the same
+    if incoming_host is node.address or node.miner.verify_candidate_block(candidate_block_data):
         new_block_header = BlockHeader()
         new_block_header.nonce = candidate_block_data["header"]["nonce"]
         new_block_header.previous_block_hash = candidate_block_data["header"]["previous_block_hash"]
