@@ -3,13 +3,18 @@ import time
 from utils.block_header import BlockHeader
 from utils.block import Block
 import hashlib
-from utils.proof_of_work import proof_of_work
 import requests
 import base64
-max_nonce = 2 ** 32 # 4 billion
+
+
+max_nonce = 2 ** 32  # 4 billion
 
 
 class Miner:
+    """
+    Class containing own thread to mine cryptocurrency, part of block
+    """
+
     def __init__(self, node):
         self.difficulty_bits = 5
         self.node = node
@@ -17,7 +22,11 @@ class Miner:
         miner_thread = threading.Thread(name='miner_thread', target=self.mine)
         miner_thread.start()
 
-    def mine(self):
+    def mine(self) -> None:
+        """
+        Infinitely running function calculating complex hashes used for mining cryptocurrency
+        :return:
+        """
         time.sleep(10)
         while True:
             self.reset = False
@@ -36,7 +45,11 @@ class Miner:
                 except Exception as e:
                     print(f"Error with node {host}, couldn't find active target host. {str(e)}")
 
-    def prepare_candidate_block(self):
+    def prepare_candidate_block(self) -> Block or None:
+        """
+        Creates and validates (with proof of work) a new candidate block based on the last element of blockchain
+        :return: new block calculated from the previous one in blockchain
+        """
         last_block: Block = self.node.blockchain.blocks[-1]
         last_block_hash = hashlib.sha256(str(last_block.as_json()).encode('utf-8')).hexdigest()
         candidate_block_header = BlockHeader()
@@ -49,13 +62,23 @@ class Miner:
         print("Candidate block" + str(candidate_block.as_json()))
         return candidate_block
 
-    def verify_candidate_block(self, candidate_block: Block):
+    def verify_candidate_block(self, candidate_block: Block) -> bool:
+        """
+        Checks if calculated hash value (in hexadecimal) is smaller than target value
+        :param candidate_block: source block used for calculating current hash
+        :return: previously described number comparison flag - True if hash result is smaller than target
+        """
         target = 2 ** (256 - self.difficulty_bits)
         hash_result = hashlib.sha256(str(candidate_block.as_json()).encode('utf-8')).hexdigest()
         # check if this is a valid result, below the target
         return int(hash_result, 16) < target
 
-    def proof_of_work(self, block: Block):
+    def proof_of_work(self, block: Block) -> int:
+        """
+        Calculate next hash in blockchain as proof of work for entire network
+        :param block: block that needs updating by setting nonce flag
+        :return: iteration index when hashing succeeded or max nonce
+        """
         # calculate the difficulty target
         target = 2 ** (256 - self.difficulty_bits)
         print("Started proof of work")

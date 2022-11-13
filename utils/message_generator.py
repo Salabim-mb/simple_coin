@@ -4,14 +4,24 @@ from utils.general.general import GeneralUtil
 import threading
 import requests
 
+from utils.node import Node
+
 
 class MessageGenerator:
-    def __init__(self, node):
+    """
+    Class responsible for broadcasting test messages to known nodes
+    """
+
+    def __init__(self, node: Node):
         self.node = node
         generator_thread = threading.Thread(name="message_generator", target=self.generate_messages)
         generator_thread.start()
 
-    def generate_messages(self):
+    def generate_messages(self) -> None:
+        """
+        'Broadcast' test message by looping over node list
+        :return:
+        """
         while True:
             time.sleep(5)
             message, signature = GeneralUtil.generate_message_with_signature(self.node)

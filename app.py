@@ -9,7 +9,7 @@ from utils.block_header import BlockHeader
 
 from utils.general.general import GeneralUtil
 from utils.node import Node
-from utils.messenger.messenger import check_if_message_authentic, verify_sender, sign_message
+from utils.messenger.messenger import check_if_message_authentic, verify_sender
 
 app = Flask(__name__)
 app.config.from_object(__name__)
@@ -104,10 +104,7 @@ def candidate_block():
         new_block_header.previous_block_hash = candidate_block_data["header"]["previous_block_hash"]
         new_block = Block(new_block_header, candidate_block_data["transactions"])
         node.blockchain.blocks.append(new_block)
-<<<<<<< HEAD
-=======
         node.miner.reset = True
->>>>>>> 218e94480b19a95b96cf5a87a9c8cff2cafd925e
 
 
 @app.route("/")

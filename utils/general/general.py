@@ -5,6 +5,9 @@ ARG_NUM = 3
 
 
 class GeneralUtil:
+    """
+    Collection of random helper methods
+    """
 
     @staticmethod
     def parse_args(argv: []) -> (int, int):

@@ -14,12 +14,18 @@ BLOCK_SIZE = 16
 pad = lambda s: s + (BLOCK_SIZE - len(s) % BLOCK_SIZE) * chr(BLOCK_SIZE - len(s) % BLOCK_SIZE)
 unpad = lambda s: s[:-ord(s[len(s) - 1:])]
 ###
+
+
 LOCAL_ADDRESS = "http://127.0.0.1"
 searchable_port_suf = range(5001, 5011)     # Port range to search addresses
 
 
 class Node:
-    def __init__(self, node_name, port):
+    """
+    Representation of single element in network, as well as storage for identities (self and remote hosts)
+    """
+
+    def __init__(self, node_name: str, port: int):
         self.name = node_name
         self.address = "http://127.0.0.1:" + str(port)
         self.node_list: [] = []
@@ -34,10 +40,10 @@ class Node:
         self.message_generator = MessageGenerator(self)
         self.miner = Miner(self)
 
-    def get_ssh_pair(self):
+    def get_ssh_pair(self) -> (str, str):
         """
         Read a pair of public and private key from files
-        :return:
+        :return: priv and pub key
         """
         try:
             with open(f"keys/{self.name}.pub", "r") as f:
@@ -51,10 +57,10 @@ class Node:
             print(f"Key pair {self.name}.pub and {self.name}.key not found, generating new pair...")
             return self.__generate_ssh_pair()
 
-    def __generate_ssh_pair(self):
+    def __generate_ssh_pair(self) -> (str, str):
         """
         [PRIVATE METHOD] Create pair of SSH keys ciphrated with ECDSA algorithm
-        :return: None
+        :return: priv and pub key
         """
         priv_key = SigningKey.generate()
         pub_key = priv_key.verifying_key
@@ -103,7 +109,7 @@ class Node:
         return unpad(cipher.decrypt(enc[16:]))
 
     @staticmethod
-    def get_key(password, salt) -> (int, bytes):
+    def get_key(password: str, salt: bytes) -> (int, bytes):
         """
 
         :param password: base for PBKDF2 algorithm hash
