@@ -6,3 +6,4 @@ Flask-Session
 cryptography
 pycryptodome
 ecdsa
+multiprocessing
