@@ -109,6 +109,11 @@ def candidate_block():
         node.miner.reset = True
 
 
+@app.route('/get-blockchain', methods=['GET'])
+def get_candidate_blocks():
+    return make_response(jsonify(node.blockchain))
+
+
 @app.route("/")
 def hello_world():
     print(f"Server running: {node.name} on url {node.address}")
