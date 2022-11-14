@@ -17,7 +17,7 @@ unpad = lambda s: s[:-ord(s[len(s) - 1:])]
 
 
 LOCAL_ADDRESS = "http://127.0.0.1"
-searchable_port_suf = range(5001, 5011)     # Port range to search addresses
+searchable_port_suf = range(5001, 5003)     # Port range to search addresses
 
 
 class Node:
@@ -36,9 +36,9 @@ class Node:
 
         self.register_node_in_blockchain(self.get_data_to_send())
 
-        self.blockchain = Blockchain(self)
-        self.message_generator = MessageGenerator(self)
-        self.miner = Miner(self)
+        self.blockchain = Blockchain()
+        self.message_generator = MessageGenerator()
+        self.miner = Miner()
 
     def get_ssh_pair(self) -> (str, str):
         """

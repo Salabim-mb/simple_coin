@@ -106,7 +106,10 @@ def candidate_block():
         new_block_header.previous_block_hash = candidate_block_data["header"]["previous_block_hash"]
         new_block = Block(new_block_header, candidate_block_data["transactions"])
         node.blockchain.blocks.append(new_block)
-        node.miner.reset = True
+        if incoming_host is not node.address:
+            node.miner.reset = True
+        return Response(status=201)
+    return Response(status=400)
 
 
 @app.route('/get-blockchain', methods=['GET'])
@@ -122,4 +125,7 @@ def hello_world():
 if __name__ == '__main__':
     node_name, port = GeneralUtil.parse_args(sys.argv)
     node = Node(node_name, port)
+    node.blockchain.fetch_blocks(node)
+    node.message_generator.run(node)
+    node.miner.run(node)
     app.run(port=port)
