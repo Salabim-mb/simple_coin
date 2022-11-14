@@ -114,7 +114,10 @@ def candidate_block():
 
 @app.route('/get-blockchain', methods=['GET'])
 def get_candidate_blocks():
-    return make_response(jsonify(node.blockchain))
+    json_list = []
+    for internal_node in node.blockchain.blocks:
+        json_list.append(internal_node.as_json())
+    return make_response(jsonify(json_list))
 
 
 @app.route("/")

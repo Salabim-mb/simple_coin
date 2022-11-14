@@ -25,6 +25,7 @@ def mine(miner, node) -> None:
             # send to everyone, including self
             host = external_node['address']
             try:
+                time.sleep(1)
                 requests.post(url=host + "/candidate-block", json=candidate_block.as_json(), headers={
                     'X-Pub-Key': base64.b64encode(node.pub_key.to_string()),
                     'Origin': node.address
@@ -61,7 +62,7 @@ class Miner:
         if nonce == -1:
             return
         candidate_block.header.nonce = nonce
-        print("Candidate block" + str(candidate_block.as_json()))
+        # print("Candidate block" + str(candidate_block.as_json()))
         return candidate_block
 
     def verify_candidate_block(self, candidate_block: {}) -> bool:
@@ -83,7 +84,7 @@ class Miner:
         """
         # calculate the difficulty target
         target = 2 ** (256 - self.difficulty_bits)
-        print("Started proof of work")
+        # print("Started proof of work")
         nonce = -1
         for nonce in range(max_nonce):
             if self.reset:
@@ -92,10 +93,10 @@ class Miner:
             hash_result = hashlib.sha256(str(block.as_json()).encode('utf-8')).hexdigest()
             # check if this is a valid result, below the target
             if int(hash_result, 16) < target:
-                print(f"Success with nonce {nonce}")
-                print(f'Hash is {hash_result}')
+                # print(f"Success with nonce {nonce}")
+                # print(f'Hash is {hash_result}')
                 return nonce
-        print(f'Failed after {nonce} tries')
+        # print(f'Failed after {nonce} tries')
         return nonce
 
     def run(self, node) -> None:

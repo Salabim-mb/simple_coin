@@ -25,5 +25,12 @@ class Blockchain:
                 if external_node['address'] is node.address:
                     continue
                 data = requests.get(url=external_node["address"] + "/get-blockchain")
-                self.node.blockchain = data.json()
+                print(data.json())
+                block_list = []
+                for block in data.json():
+                    header = BlockHeader()
+                    header.previous_block_hash = block["header"]["previous_block_hash"]
+                    header.nonce = block["header"]["nonce"]
+                    block_list.append(Block(header, block["transactions"]))
+                node.blockchain.blocks = block_list
                 break
