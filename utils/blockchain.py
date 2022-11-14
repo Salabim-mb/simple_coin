@@ -27,3 +27,4 @@ class Blockchain:
             for external_node in self.node.node_list:
                 data = requests.get(url=external_node["address"] + "/get-blockchain")
                 self.node.blockchain = data.json()
+                break
