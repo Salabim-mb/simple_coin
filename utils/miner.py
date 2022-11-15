@@ -10,7 +10,7 @@ import base64
 max_nonce = 2 ** 32  # 4 billion
 
 
-def mine(miner, node) -> None:
+def mine(miner, blockchain, transaction_pool, pub_key, address, node_list) -> None:
     """
     Infinitely running function calculating complex hashes used for mining cryptocurrency
     :return:
@@ -18,17 +18,17 @@ def mine(miner, node) -> None:
     print("Miner daemon start")
     while True:
         miner.reset = False
-        candidate_block = miner.prepare_candidate_block(node)
+        candidate_block = miner.prepare_candidate_block(blockchain, transaction_pool)
         if miner.reset:
             continue
-        for external_node in node.node_list:
+        for external_node in node_list:
             # send to everyone, including self
             host = external_node['address']
             try:
                 time.sleep(1)
                 requests.post(url=host + "/candidate-block", json=candidate_block.as_json(), headers={
-                    'X-Pub-Key': base64.b64encode(node.pub_key.to_string()),
-                    'Origin': node.address
+                    'X-Pub-Key': base64.b64encode(pub_key.to_string()),
+                    'Origin': address
                 })
             except Exception as e:
                 print(f"Error with node {host}, couldn't find active target host. {str(e)}")
@@ -45,20 +45,20 @@ class Miner:
         self.queue = None
         self.miner_thread = None
 
-    def prepare_candidate_block(self, node) -> Block or None:
+    def prepare_candidate_block(self, blockchain, transaction_pool) -> Block or None:
         """
         Creates and validates (with proof of work) a new candidate block based on the last element of blockchain
         :param: node
         :return: new block calculated from the previous one in blockchain
         """
         try:
-            last_block: Block = node.blockchain.blocks[-1]
+            last_block: Block = blockchain.blocks[-1]
         except IndexError:
             last_block = Block(BlockHeader(), [])
         last_block_hash = hashlib.sha256(str(last_block.as_json()).encode('utf-8')).hexdigest()
         candidate_block_header = BlockHeader()
         candidate_block_header.previous_block_hash = last_block_hash
-        candidate_block = Block(candidate_block_header, node.transaction_pool)
+        candidate_block = Block(candidate_block_header, transaction_pool)
         nonce = self.proof_of_work(candidate_block)
         if nonce == -1:
             return
@@ -106,6 +106,6 @@ class Miner:
         :return:
         """
         self.queue = Queue()
-        self.miner_thread = Process(name='miner_thread', target=mine, args=(self, node,))
+        self.miner_thread = Process(name='miner_thread', target=mine, args=(self, node.blockchain, node.transaction_pool, node.pub_key, node.address, node.node_list))
         self.miner_thread.start()
 

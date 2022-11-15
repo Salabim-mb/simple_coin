@@ -29,7 +29,7 @@ class Node:
         self.name = node_name
         self.address = "http://127.0.0.1:" + str(port)
         self.node_list: [] = []
-        self.transaction_pool: [] = ["begin"]
+        self.transaction_pool: [] = ["begin" + str(node_name)]
         random.seed(node_name)
         self.salt = str(random.random())[2:10].encode()
         self.pub_key, self.priv_key = self.get_ssh_pair()
