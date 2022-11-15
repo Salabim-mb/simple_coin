@@ -106,8 +106,8 @@ def candidate_block():
         new_block_header.previous_block_hash = candidate_block_data["header"]["previous_block_hash"]
         new_block = Block(new_block_header, candidate_block_data["transactions"])
         node.blockchain.blocks.append(new_block)
-        if incoming_host is not node.address:
-            node.miner.reset = True
+        if incoming_host is node.address:
+            node.reset()
         return Response(status=201)
     return Response(status=400)
 

@@ -25,7 +25,6 @@ class Blockchain:
                 if external_node['address'] is node.address:
                     continue
                 data = requests.get(url=external_node["address"] + "/get-blockchain")
-                print(data.json())
                 block_list = []
                 for block in data.json():
                     header = BlockHeader()

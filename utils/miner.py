@@ -42,7 +42,8 @@ class Miner:
     def __init__(self):
         self.difficulty_bits = 5
         self.reset = False
-        self.queue = Queue()
+        self.queue = None
+        self.miner_thread = None
 
     def prepare_candidate_block(self, node) -> Block or None:
         """
@@ -104,7 +105,7 @@ class Miner:
         Worker for maintaining a multiprocess mining
         :return:
         """
-        time.sleep(10)  # wait 10 secs before starting to mine
-        miner_thread = Process(name='miner_thread', target=mine, args=(self, node,))
-        miner_thread.start()
+        self.queue = Queue()
+        self.miner_thread = Process(name='miner_thread', target=mine, args=(self, node,))
+        self.miner_thread.start()
 

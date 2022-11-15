@@ -29,7 +29,7 @@ class Node:
         self.name = node_name
         self.address = "http://127.0.0.1:" + str(port)
         self.node_list: [] = []
-        self.transaction_pool: [] = []
+        self.transaction_pool: [] = ["begin"]
         random.seed(node_name)
         self.salt = str(random.random())[2:10].encode()
         self.pub_key, self.priv_key = self.get_ssh_pair()
@@ -39,6 +39,14 @@ class Node:
         self.blockchain = Blockchain()
         self.message_generator = MessageGenerator()
         self.miner = Miner()
+
+    def reset(self):
+        self.miner.miner_thread.join()
+        new_message = self.message_generator.queue.get()
+        self.message_generator.generator_thread.join()
+        self.transaction_pool.append(new_message)
+        self.message_generator.run(self)
+        self.miner.run(self)
 
     def get_ssh_pair(self) -> (str, str):
         """
@@ -64,7 +72,7 @@ class Node:
         """
         priv_key = SigningKey.generate()
         pub_key = priv_key.verifying_key
-        priv_key_encrypted = self.encrypt_key(priv_key.to_pem().decode(), "password", self.salt) # TODO how to store pass and salt? env?
+        priv_key_encrypted = self.encrypt_key(priv_key.to_pem().decode(), "password", self.salt)
         try:
             with open(f"./keys/{self.name}.pub", "w") as f:
                 f.write(pub_key.to_pem().decode())
