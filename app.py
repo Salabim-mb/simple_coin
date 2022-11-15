@@ -20,6 +20,7 @@ CORS(app)
 node = None
 
 LOCAL_ADDRESS = "http://127.0.0.1"
+reset = False
 
 
 @app.after_request
@@ -97,14 +98,29 @@ def update_list():
 
 @app.route('/candidate-block', methods=['POST'])
 def candidate_block():
+    global reset
     candidate_block_data = json.loads(request.get_data().decode())
-    if node.miner.verify_candidate_block():
+    if node.miner.verify_candidate_block(candidate_block_data):
         new_block_header = BlockHeader()
         new_block_header.nonce = candidate_block_data["header"]["nonce"]
         new_block_header.previous_block_hash = candidate_block_data["header"]["previous_block_hash"]
         new_block = Block(new_block_header, candidate_block_data["transactions"])
         node.blockchain.blocks.append(new_block)
-        node.miner.reset = True
+        reset = True
+    return Response(status=200)
+
+
+# @app.route('/fetch-blockchain', methods=['GET'])
+# def fetch_blockchain():
+#     return make_response(node.blockchain.blocks)
+
+
+@app.route('/fetch-blockchain', methods=['GET'])
+def get_candidate_blocks():
+    json_list = []
+    for internal_node in node.blockchain.blocks:
+        json_list.append(internal_node.as_json())
+    return make_response(jsonify(json_list))
 
 
 @app.route("/")
