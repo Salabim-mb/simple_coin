@@ -39,6 +39,7 @@ def manage_message():
                 and check_if_message_authentic(data['message'], data['signature'], base64.b64decode(sender_pub_key.encode())):
             node.transaction_pool.append(data)
             print(f"Message from {request.headers.get('Origin')}: \"{data['message']}\" was added to transaction pool")
+            node.reset()
             return Response(status=200)
         else:
             return Response(status=403)
@@ -54,6 +55,7 @@ def manage_message():
 @app.route('/register-node-frontend', methods=['POST'])
 def register_node():
     node.register_node_in_blockchain(request.json)
+    node.reset()
     return Response(status=200)
 
 
