@@ -8,6 +8,8 @@ import requests
 from utils.message_generator import MessageGenerator
 from utils.blockchain import Blockchain
 from utils.miner import Miner
+from utils.wallet.Wallet import Wallet
+
 
 # snippet from https://www.quickprogrammingtips.com/python/aes-256-encryption-and-decryption-in-python.html
 BLOCK_SIZE = 16
@@ -30,6 +32,7 @@ class Node:
 
         self.register_node_in_blockchain(self.get_data_to_send())
 
+        self.wallet = Wallet(self)
         self.blockchain = Blockchain(self)
         self.message_generator = MessageGenerator(self)
         self.miner = Miner(self)

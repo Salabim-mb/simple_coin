@@ -9,7 +9,7 @@ from utils.block_header import BlockHeader
 
 from utils.general.general import GeneralUtil
 from utils.node import Node
-from utils.messenger.messenger import check_if_message_authentic, verify_sender, sign_message
+from utils.messenger.messenger import check_if_message_authentic, verify_sender
 
 app = Flask(__name__)
 app.config.from_object(__name__)
@@ -56,6 +56,27 @@ def manage_message():
 def register_node():
     node.register_node_in_blockchain(request.json)
     return Response(status=200)
+
+
+@app.route('/proxy/transfer/<target_port>', methods=['POST'])
+def proxy_transfer(target_port):
+    target_host = f"{LOCAL_ADDRESS}:{target_port}"
+    data = request.get_json()
+    try:
+        if int(data['amount']) > node.wallet.balance:
+            return Response(status=403)
+        tran = node.wallet.prepare_transaction_to_send(int(data['amount']))
+        requests.post(url=target_host + "/transfer", json={
+            'amount': data['amount'],
+            'transfer_id': tran.id
+        }, headers={
+            'X-Pub-Key': base64.b64encode(node.pub_key.to_string()),
+            'Origin': node.address
+        })
+        node.wallet.balance -= int(data['amount'])
+        return Response(status=200)
+    except Exception as e:
+        return Response(status=400)
 
 
 @app.route('/proxy/forward-message/<target_port>', methods=["GET"])
@@ -121,6 +142,20 @@ def get_candidate_blocks():
     for internal_node in node.blockchain.blocks:
         json_list.append(internal_node.as_json())
     return make_response(jsonify(json_list))
+
+
+@app.route('/get-balance', methods=['GET'])
+def get_wallet_balance():
+    return make_response(jsonify({"balance": node.wallet.balance}))
+
+
+@app.route('/transfer', methods=['POST'])
+def transfer_simple_coin():
+    data = request.get_json()
+    sender_pk = request.headers.get('X-Pub-Key')
+    node.wallet.create_transaction(int(data['amount']), data['transaction_id'], sender_pk)
+    node.wallet.balance += int(data['amount'])
+    return Response(status=200)
 
 
 @app.route("/")
