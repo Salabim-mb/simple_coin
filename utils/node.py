@@ -17,7 +17,7 @@ pad = lambda s: s + (BLOCK_SIZE - len(s) % BLOCK_SIZE) * chr(BLOCK_SIZE - len(s)
 unpad = lambda s: s[:-ord(s[len(s) - 1:])]
 ###
 LOCAL_ADDRESS = "http://127.0.0.1"
-searchable_port_suf = range(5001, 5011)     # Port range to search addresses
+searchable_port_suf = range(5001, 5003)     # Port range to search addresses
 
 
 class Node:

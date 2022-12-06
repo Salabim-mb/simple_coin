@@ -9,7 +9,8 @@ class Wallet:
     def __init__(self, node):
         self.node = node
         self.balance = 100      # for testing purposes
-        self.transactions: [Transaction] = []
+        self.tran_fee = 1
+        self.transactions: [Transaction] = [Transaction()]
 
     def create_transaction(self, amount: int, transaction_id: str, prev_owner_pk: str) -> None:
         """

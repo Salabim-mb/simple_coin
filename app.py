@@ -66,6 +66,7 @@ def proxy_transfer(target_port):
         if int(data['amount']) > node.wallet.balance:
             return Response(status=403)
         tran = node.wallet.prepare_transaction_to_send(int(data['amount']))
+        print(f"TRANSACTION: Sending {data['amount']} to {target_host}")
         requests.post(url=target_host + "/transfer", json={
             'amount': data['amount'],
             'transfer_id': tran.id
@@ -73,9 +74,10 @@ def proxy_transfer(target_port):
             'X-Pub-Key': base64.b64encode(node.pub_key.to_string()),
             'Origin': node.address
         })
-        node.wallet.balance -= int(data['amount'])
+        node.wallet.balance -= int(data['amount']) + node.wallet.tran_fee
         return Response(status=200)
     except Exception as e:
+        print(e)
         return Response(status=400)
 
 
@@ -151,11 +153,15 @@ def get_wallet_balance():
 
 @app.route('/transfer', methods=['POST'])
 def transfer_simple_coin():
-    data = request.get_json()
-    sender_pk = request.headers.get('X-Pub-Key')
-    node.wallet.create_transaction(int(data['amount']), data['transaction_id'], sender_pk)
-    node.wallet.balance += int(data['amount'])
-    return Response(status=200)
+    try:
+        data = request.get_json()
+        sender_pk = request.headers.get('X-Pub-Key')
+        node.wallet.create_transaction(int(data['amount']), data['transfer_id'], sender_pk)
+        node.wallet.balance += int(data['amount'])
+        return Response(status=200)
+    except Exception as e:
+        print(e, request.get_json())
+        return Response(status=400)
 
 
 @app.route("/")
