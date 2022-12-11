@@ -1,3 +1,4 @@
+import random
 import sys
 import requests
 import json
@@ -38,8 +39,8 @@ def manage_message():
         data = json.loads(request.get_data().decode())
         if verify_sender(node.node_list, sender_pub_key) \
                 and check_if_message_authentic(data['message'], data['signature'], base64.b64decode(sender_pub_key.encode())):
-            node.transaction_pool.append(data)
-            print(f"Message from {request.headers.get('Origin')}: \"{data['message']}\" was added to transaction pool")
+            print(f"Message from {request.headers.get('Origin')}: \"{data['message']}\".")
+            node.wallet.balance += json.loads(data['message'])['outputs'][0]['amount']
             return Response(status=200)
         else:
             return Response(status=403)
@@ -69,7 +70,8 @@ def proxy_transfer(target_port):
         print(f"TRANSACTION: Sending {data['amount']} to {target_host}")
         requests.post(url=target_host + "/transfer", json={
             'amount': data['amount'],
-            'transfer_id': tran.id
+            'transfer_id': tran.id,
+            "signature": GeneralUtil.get_msg_signature(node, tran.id)
         }, headers={
             'X-Pub-Key': base64.b64encode(node.pub_key.to_string()),
             'Origin': node.address
@@ -140,10 +142,14 @@ def candidate_block():
 
 @app.route('/fetch-blockchain', methods=['GET'])
 def get_candidate_blocks():
-    json_list = []
-    for internal_node in node.blockchain.blocks:
-        json_list.append(internal_node.as_json())
-    return make_response(jsonify(json_list))
+    try:
+        json_list = []
+        for internal_node in node.blockchain.blocks:
+            json_list.append(internal_node.as_json())
+        return make_response(jsonify(json_list))
+    except Exception as e:
+        print(e)
+        return Response(status=400)
 
 
 @app.route('/get-balance', methods=['GET'])
@@ -156,11 +162,14 @@ def transfer_simple_coin():
     try:
         data = request.get_json()
         sender_pk = request.headers.get('X-Pub-Key')
-        node.wallet.create_transaction(int(data['amount']), data['transfer_id'], sender_pk)
-        node.wallet.balance += int(data['amount'])
+        if verify_sender(node.node_list, sender_pk):
+            if check_if_message_authentic(data['transfer_id'], data['signature'], base64.b64decode(sender_pk.encode())):
+                node.wallet.create_transaction(int(data['amount']), data['transfer_id'], sender_pk)
+                node.wallet.balance += int(data['amount'])
         return Response(status=200)
     except Exception as e:
-        print(e, request.get_json())
+        print(e)
+        print(request.get_json())
         return Response(status=400)
 
 

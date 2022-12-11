@@ -8,6 +8,7 @@ import requests
 from utils.message_generator import MessageGenerator
 from utils.blockchain import Blockchain
 from utils.miner import Miner
+from utils.wallet.Transaction import Transaction
 from utils.wallet.Wallet import Wallet
 
 

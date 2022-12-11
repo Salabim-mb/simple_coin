@@ -51,3 +51,16 @@ class Transaction:
         :return: None
         """
         self.outputs.append(Output(owner_pk, amount - self.fee))
+
+    def as_json(self) -> {}:
+        """
+
+        :return: Dict with transaction data
+        """
+        return {
+            "id": self.id,
+            "inputs": list(map(lambda x: x.as_json(), self.inputs)),
+            "outputs": list(map(lambda y: y.as_json(), self.outputs)),
+            "fee": self.fee
+        }
+

@@ -1,7 +1,15 @@
+import base64
+import random
+
 from utils.messenger.messenger import sign_message
 import datetime
+import json
+
+from utils.wallet.Transaction import Transaction
 
 ARG_NUM = 3
+
+MINING_REWARD = 2
 
 
 class GeneralUtil:
@@ -38,6 +46,13 @@ class GeneralUtil:
         :param node: instance of ItentityLocal class,
         :return: example message and its signature
         """
-        message = f"test message from node {node.name}, {node.address}, created at {datetime.datetime.now()}"
-        signature = sign_message(message, node.priv_key).decode('ISO-8859-1')
-        return message, signature
+        message = Transaction()
+        # message.create_input(MINING_REWARD, base64.b64encode(node.pub_key.to_string()).decode(),
+        #                base64.b64encode(node.pub_key.to_string()).decode())
+        message.create_output(random.randint(2, 4), base64.b64encode(node.pub_key.to_string()).decode())
+        signature = sign_message(json.dumps(message.as_json()), node.priv_key).decode('ISO-8859-1')
+        return json.dumps(message.as_json()), signature
+
+    @staticmethod
+    def get_msg_signature(node, message) -> str:
+        return sign_message(message, node.priv_key).decode('ISO-8859-1')

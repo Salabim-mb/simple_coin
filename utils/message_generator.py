@@ -4,6 +4,8 @@ from utils.general.general import GeneralUtil
 import threading
 import requests
 
+MINING_REWARD = 2
+
 
 class MessageGenerator:
     def __init__(self, node):
@@ -13,7 +15,7 @@ class MessageGenerator:
 
     def generate_messages(self):
         while True:
-            time.sleep(5)
+            time.sleep(10)
             message, signature = GeneralUtil.generate_message_with_signature(self.node)
             for external_node in self.node.node_list:
                 if external_node['name'] == self.node.name:
@@ -27,5 +29,6 @@ class MessageGenerator:
                         'X-Pub-Key': base64.b64encode(self.node.pub_key.to_string()),
                         'Origin': self.node.address
                     })
+                    self.node.wallet.balance -= MINING_REWARD + self.node.wallet.tran_fee
                 except Exception as e:
                     print(f"Error with node {host}, couldn't find active target host. {str(e)}")

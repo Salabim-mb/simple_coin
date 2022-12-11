@@ -1,15 +1,16 @@
-import datetime
+import random
 import threading
 import time
 from utils.block_header import BlockHeader
 from utils.block import Block
 import hashlib
-from utils.proof_of_work import proof_of_work
 import requests
 import base64
-from utils.general.general import GeneralUtil
+from utils.wallet.Transaction import Transaction
 
 max_nonce = 2 ** 32 # 4 billion
+
+MINING_REWARD = 2
 
 
 class Miner:
@@ -26,8 +27,11 @@ class Miner:
             reset = False
             candidate_block = self.prepare_candidate_block()
             self.node.blockchain.blocks.append(candidate_block)
-            m, s = GeneralUtil.generate_message_with_signature(self.node)
-            self.node.transaction_pool.append(f"data {str(m)}")
+            m = Transaction()
+            m.create_input(MINING_REWARD,"%032x" % random.getrandbits(256), base64.b64encode(self.node.pub_key.to_string()).decode())
+            m.create_output(MINING_REWARD, base64.b64encode(self.node.pub_key.to_string()).decode())
+            self.node.wallet.balance += MINING_REWARD
+            self.node.transaction_pool.append(m.as_json())
             if reset:
                 continue
             for external_node in self.node.node_list:
@@ -43,7 +47,11 @@ class Miner:
                     print(f"Error with node {host}, couldn't find active target host. {str(e)}")
 
     def prepare_candidate_block(self):
-        last_block: Block = self.node.blockchain.blocks[-1]
+        try:
+            last_block: Block = self.node.blockchain.blocks[-1]
+        except IndexError:
+            last_block_header = BlockHeader()
+            last_block = Block(last_block_header, [])
         last_block_hash = hashlib.sha256(str(last_block).encode('utf-8')).hexdigest()
         candidate_block_header = BlockHeader()
         candidate_block_header.previous_block_hash = last_block_hash
