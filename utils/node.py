@@ -10,7 +10,7 @@ from utils.blockchain import Blockchain
 from utils.miner import Miner
 from utils.wallet.Transaction import Transaction
 from utils.wallet.Wallet import Wallet
-
+from utils.block import Block
 
 # snippet from https://www.quickprogrammingtips.com/python/aes-256-encryption-and-decryption-in-python.html
 BLOCK_SIZE = 16
@@ -30,11 +30,14 @@ class Node:
         random.seed(node_name)
         self.salt = str(random.random())[2:10].encode()
         self.pub_key, self.priv_key = self.get_ssh_pair()
+        self.orphan_list: [Block] = []
 
         self.register_node_in_blockchain(self.get_data_to_send())
 
         self.wallet = Wallet(self)
         self.blockchain = Blockchain(self)
+        self.blockchain.fetch_blocks()
+
         self.message_generator = MessageGenerator(self)
         self.miner = Miner(self)
 
@@ -153,3 +156,15 @@ class Node:
                 self.node_list = response.json()
             except Exception as e:
                 print(f"Error with node {host}, couldn't find active target host. {str(e)}")
+
+    def filter_transaction_pool(self, transaction_pool_received):
+        """
+        Verify if received block contains local transaction and remove duplicates as they are already
+        added to blockchain
+        :param transaction_pool_received:
+        :return:
+        """
+        for transaction in transaction_pool_received:
+            for index, local_transaction in enumerate(self.transaction_pool):
+                if transaction["id"] == local_transaction["id"]:
+                    self.transaction_pool.remove(index)

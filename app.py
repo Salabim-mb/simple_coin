@@ -7,6 +7,9 @@ from flask_cors import CORS
 import base64
 from utils.block import Block
 from utils.block_header import BlockHeader
+from anytree.exporter import UniqueDotExporter
+from anytree import RenderTree
+import hashlib
 
 from utils.general.general import GeneralUtil
 from utils.node import Node
@@ -35,6 +38,9 @@ def modify_headers(response):
 @app.route("/message", methods=["POST", "GET"])
 def manage_message():
     if request.method == "POST":
+        if random.randint(0, 100) > 85:
+            print("Transaction ignored")
+            return Response(status=200)
         sender_pub_key = request.headers.get('X-Pub-Key')
         data = json.loads(request.get_data().decode())
         if verify_sender(node.node_list, sender_pub_key) \
@@ -123,14 +129,26 @@ def update_list():
 
 @app.route('/candidate-block', methods=['POST'])
 def candidate_block():
+    if random.randint(0, 100) > 85:
+        print("Candidate block ignored")
+        return Response(status=200)
     global reset
     candidate_block_data = json.loads(request.get_data().decode())
     if node.miner.verify_candidate_block(candidate_block_data):
         new_block_header = BlockHeader()
         new_block_header.nonce = candidate_block_data["header"]["nonce"]
-        new_block_header.previous_block_hash = candidate_block_data["header"]["previous_block_hash"]
-        new_block = Block(new_block_header, candidate_block_data["transactions"])
-        node.blockchain.blocks.append(new_block)
+        hash_ = candidate_block_data["header"]["previous_block_hash"]
+        new_block_header.previous_block_hash = hash_
+        parent = None
+        for block in node.blockchain.blocks:
+            if hashlib.sha256(block).hexdigest() == hash_:
+                parent = block
+        new_block = Block(new_block_header, json.loads(candidate_block_data["transactions"]), parent)
+        node.filter_transaction_pool(candidate_block_data["transactions"])
+        if not parent:
+            node.orphan_list.append(new_block)
+        else:
+            node.blockchain.blocks.append(new_block)
         reset = True
     return Response(status=200)
 
@@ -155,6 +173,13 @@ def get_candidate_blocks():
 @app.route('/get-balance', methods=['GET'])
 def get_wallet_balance():
     return make_response(jsonify({"balance": node.wallet.balance}))
+
+
+@app.route('/print-blockchain', methods=['GET'])
+def print_blockchain():
+    print(RenderTree(node.blockchain.blocks[0]))
+    UniqueDotExporter(node.blockchain.blocks[0], nodeattrfunc=lambda n: 'label="%s"' % n.name).to_picture("tree.png")
+    return Response(status=200)
 
 
 @app.route('/transfer', methods=['POST'])
