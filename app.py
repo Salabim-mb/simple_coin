@@ -24,7 +24,6 @@ CORS(app)
 node = None
 
 LOCAL_ADDRESS = "http://127.0.0.1"
-reset = False
 
 
 @app.after_request
@@ -129,10 +128,9 @@ def update_list():
 
 @app.route('/candidate-block', methods=['POST'])
 def candidate_block():
-    if random.randint(0, 100) > 85:
-        print("Candidate block ignored")
-        return Response(status=200)
-    global reset
+    # if random.randint(0, 100) > 85:
+    #     print("Candidate block ignored")
+    #     return Response(status=200)
     candidate_block_data = json.loads(request.get_data().decode())
     if node.miner.verify_candidate_block(candidate_block_data):
         new_block_header = BlockHeader()
@@ -141,15 +139,16 @@ def candidate_block():
         new_block_header.previous_block_hash = hash_
         parent = None
         for block in node.blockchain.blocks:
-            if hashlib.sha256(block).hexdigest() == hash_:
+            if hashlib.sha256(str(block.as_json()).encode("utf-8")).hexdigest() == hash_:
                 parent = block
-        new_block = Block(new_block_header, json.loads(candidate_block_data["transactions"]), parent)
+        new_block = Block(new_block_header, json.loads(candidate_block_data["transactions"]), None)
         node.filter_transaction_pool(candidate_block_data["transactions"])
         if not parent:
             node.orphan_list.append(new_block)
         else:
+            new_block.parent = parent
             node.blockchain.blocks.append(new_block)
-        reset = True
+        node.miner.event.set()
     return Response(status=200)
 
 
@@ -178,7 +177,7 @@ def get_wallet_balance():
 @app.route('/print-blockchain', methods=['GET'])
 def print_blockchain():
     print(RenderTree(node.blockchain.blocks[0]))
-    UniqueDotExporter(node.blockchain.blocks[0], nodeattrfunc=lambda n: 'label="%s"' % n.name).to_picture("tree.png")
+    UniqueDotExporter(node.blockchain.blocks[0], nodeattrfunc=lambda n: 'label="%s"' % n.name).to_picture(f"tree_{node_name}.png")
     return Response(status=200)
 
 

@@ -11,6 +11,7 @@ from utils.miner import Miner
 from utils.wallet.Transaction import Transaction
 from utils.wallet.Wallet import Wallet
 from utils.block import Block
+import json
 
 # snippet from https://www.quickprogrammingtips.com/python/aes-256-encryption-and-decryption-in-python.html
 BLOCK_SIZE = 16
@@ -164,7 +165,7 @@ class Node:
         :param transaction_pool_received:
         :return:
         """
-        for transaction in transaction_pool_received:
+        for transaction in json.loads(transaction_pool_received):
             for index, local_transaction in enumerate(self.transaction_pool):
                 if transaction["id"] == local_transaction["id"]:
                     self.transaction_pool.remove(index)

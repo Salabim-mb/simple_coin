@@ -50,8 +50,9 @@ class GeneralUtil:
         # message.create_input(MINING_REWARD, base64.b64encode(node.pub_key.to_string()).decode(),
         #                base64.b64encode(node.pub_key.to_string()).decode())
         message.create_output(random.randint(2, 4), base64.b64encode(node.pub_key.to_string()).decode())
-        signature = sign_message(json.dumps(message.as_json()), node.priv_key).decode('ISO-8859-1')
-        return json.dumps(message.as_json()), signature
+        message_json = json.dumps(message.as_json())
+        signature = sign_message(message_json, node.priv_key).decode('ISO-8859-1')
+        return message_json, signature
 
     @staticmethod
     def get_msg_signature(node, message) -> str:

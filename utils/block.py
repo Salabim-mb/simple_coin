@@ -13,7 +13,7 @@ class Block(NodeMixin):
         self.data = data
         self.parent = parent
         if header.previous_block_hash:
-            self.name = "Prev. #: " + header.previous_block_hash[0:5]
+            self.name = "Prev. #: " + header.previous_block_hash[10:15]
         else:
             self.name = "First block"
 

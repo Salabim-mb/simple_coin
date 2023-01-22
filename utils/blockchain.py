@@ -30,7 +30,12 @@ class Blockchain:
                         header.previous_block_hash = block["header"]["previous_block_hash"]
                         header.nonce = block["header"]["nonce"]
                         if header.previous_block_hash:
-                            self.node.blockchain.blocks.append(Block(header, json.loads(block["transactions"]), self.node.blockchain.blocks[-1]))
+                            print("Adding new block")
+                            if self.node.blockchain.blocks[-1].header.previous_block_hash == header.previous_block_hash:
+                                self.node.blockchain.blocks.append(Block(header, json.loads(block["transactions"]), self.node.blockchain.blocks[-2]))
+                            else:
+                                self.node.blockchain.blocks.append(
+                                    Block(header, json.loads(block["transactions"]), self.node.blockchain.blocks[-1]))
                         else:
                             self.node.blockchain.blocks.append(Block(header, json.loads(block["transactions"]), None))
                     break
