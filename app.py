@@ -120,6 +120,13 @@ def print_node_list():
     return Response(status=200)
 
 
+@app.route('/print-orphan-list', methods=['GET'])
+def print_orphan_list():
+    print("Orphan list (external request):")
+    print(node.orphan_list)
+    return Response(status=200)
+
+
 @app.route('/register-node', methods=['POST'])
 def update_list():
     node.node_list = GeneralUtil.generate_unique_node_list(node.node_list, request.json)
@@ -128,9 +135,9 @@ def update_list():
 
 @app.route('/candidate-block', methods=['POST'])
 def candidate_block():
-    # if random.randint(0, 100) > 85:
-    #     print("Candidate block ignored")
-    #     return Response(status=200)
+    if random.randint(0, 100) > 85:
+        print("Candidate block ignored")
+        return Response(status=200)
     req_data = json.loads(request.get_data().decode())
     candidate_block_data = req_data['block']
     sender_pub_key = request.headers['X-Pub-Key']
@@ -138,6 +145,7 @@ def candidate_block():
     if not verify_sender(node.node_list, sender_pub_key) and not check_if_message_authentic(
             candidate_block_data, req_data['signature'], base64.b64decode(sender_pub_key.encode())
     ):
+        print("Incorrect signature of incoming block!")
         return Response(status=403)
     if node.miner.verify_candidate_block(candidate_block_data):
         new_block_header = BlockHeader()
@@ -155,6 +163,7 @@ def candidate_block():
         else:
             new_block.parent = parent
             node.blockchain.blocks.append(new_block)
+            node.filter_orphan_list(new_block)
         node.miner.event.set()
     return Response(status=200)
 

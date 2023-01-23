@@ -178,9 +178,12 @@ class Node:
         :param new_block: Block that can supposedly be someone's parent
         :return: None
         """
+        print("Orphan list")
+        print(self.orphan_list)
         for orphan in self.orphan_list:
-            if new_block.header.previous_block_hash is \
-                    hashlib.sha256(str(orphan.as_json()).encode('utf-8')).hexdigest():
+            orphan_hash = hashlib.sha256(str(orphan.as_json()).encode('utf-8')).hexdigest()
+            if new_block.header.previous_block_hash is orphan_hash:
+                print("Removing " + str(orphan_hash) + " from orphan list")
                 self.blockchain.blocks.append(orphan)
                 self.orphan_list.remove(orphan)
                 break
