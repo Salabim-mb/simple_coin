@@ -1,3 +1,5 @@
+import hashlib
+
 from Crypto.Protocol.KDF import PBKDF2
 from Crypto.Cipher import AES
 from Crypto import Random
@@ -169,3 +171,16 @@ class Node:
             for index, local_transaction in enumerate(self.transaction_pool):
                 if transaction["id"] == local_transaction["id"]:
                     self.transaction_pool.remove(index)
+
+    def filter_orphan_list(self, new_block: Block) -> None:
+        """
+        Filter orphaned block list and append picked ones to blockchain
+        :param new_block: Block that can supposedly be someone's parent
+        :return: None
+        """
+        for orphan in self.orphan_list:
+            if new_block.header.previous_block_hash is \
+                    hashlib.sha256(str(orphan.as_json()).encode('utf-8')).hexdigest():
+                self.blockchain.blocks.append(orphan)
+                self.orphan_list.remove(orphan)
+                break

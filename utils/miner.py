@@ -7,6 +7,8 @@ from utils.block import Block
 import hashlib
 import requests
 import base64
+
+from utils.messenger.messenger import sign_message
 from utils.wallet.Transaction import Transaction
 
 max_nonce = 2 ** 32 # 4 billion
@@ -50,7 +52,12 @@ class Miner:
                 continue
             host = external_node['address']
             try:
-                requests.post(url=host + "/candidate-block", json=candidate_block.as_json(), headers={
+                block, signature = sign_message(candidate_block.as_json(), self.node.priv_key)
+                payload = {
+                    "block": block,
+                    "signature": signature
+                }
+                requests.post(url=host + "/candidate-block", json=payload, headers={
                     'X-Pub-Key': base64.b64encode(self.node.pub_key.to_string()),
                     'Origin': self.node.address
                 })

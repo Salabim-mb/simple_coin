@@ -131,7 +131,14 @@ def candidate_block():
     # if random.randint(0, 100) > 85:
     #     print("Candidate block ignored")
     #     return Response(status=200)
-    candidate_block_data = json.loads(request.get_data().decode())
+    req_data = json.loads(request.get_data().decode())
+    candidate_block_data = req_data['block']
+    sender_pub_key = request.headers['X-Pub-Key']
+    # check if payload signature is valid and trusted
+    if not verify_sender(node.node_list, sender_pub_key) and not check_if_message_authentic(
+            candidate_block_data, req_data['signature'], base64.b64decode(sender_pub_key.encode())
+    ):
+        return Response(status=403)
     if node.miner.verify_candidate_block(candidate_block_data):
         new_block_header = BlockHeader()
         new_block_header.nonce = candidate_block_data["header"]["nonce"]
