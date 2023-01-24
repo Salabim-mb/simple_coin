@@ -111,7 +111,7 @@ def forward_candidate_block(port_list):
             })
         except Exception as e:
             print(e)
-            print(f"Nothing with port {port} found.")
+            print(f"Nothing with port {_port} found.")
             return Response(status=400)
     return Response(status=200)
 
