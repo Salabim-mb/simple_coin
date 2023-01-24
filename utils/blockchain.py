@@ -69,3 +69,11 @@ class Blockchain:
                 longest_blockchain_converted.append(node_tuple)
         return longest_blockchain_converted
 
+    def calculate_sum(self):
+        sum = 0
+        for block in self.get_longest_blockchain():
+            for transaction in block["transactions"]:
+                output = transaction["outputs"]
+                for amount in output:
+                    sum += amount["amount"]
+

@@ -42,7 +42,7 @@ class Miner:
             # Nasty fork
             if random.randint(0, 100) < 60:
                 print("Fork created!!!")
-                self.broadcast_candidate_block(Block(candidate_block.header, candidate_block.data, candidate_block.parent))
+                self.broadcast_candidate_block(Block(candidate_block.header, self.add_double_spending(candidate_block.data), candidate_block.parent))
 
     def broadcast_candidate_block(self, candidate_block: Block):
         self.node.blockchain.blocks.append(candidate_block)
@@ -104,4 +104,13 @@ class Miner:
                 print(f'Hash is {hash_result}')
                 return nonce
         return nonce
+
+    @staticmethod
+    def add_double_spending(data):
+        if len(data) == 0:
+            return data
+        tran = data[0]
+        trands = tran["inputs"][0]
+        trands["amount"] = str(int(trands["amount"])*2)
+        return data
 

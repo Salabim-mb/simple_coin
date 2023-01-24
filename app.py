@@ -163,7 +163,7 @@ def update_list():
 
 @app.route('/candidate-block', methods=['POST'])
 def candidate_block():
-    if random.randint(0, 100) > 85:
+    if random.randint(0, 100) > 90:
         print("Candidate block ignored")
         return Response(status=200)
     req_data = json.loads(request.get_data().decode())
@@ -188,6 +188,7 @@ def candidate_block():
         node.filter_transaction_pool(candidate_block_data["transactions"])
         if not parent:
             node.orphan_list.append(new_block)
+            print("Orphan list appended")
         else:
             new_block.parent = parent
             node.blockchain.blocks.append(new_block)
