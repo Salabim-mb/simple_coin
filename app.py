@@ -13,7 +13,8 @@ import hashlib
 
 from utils.general.general import GeneralUtil
 from utils.node import Node
-from utils.messenger.messenger import check_if_message_authentic, verify_sender
+from utils.messenger.messenger import check_if_message_authentic, verify_sender, sign_message
+from utils.wallet.Transaction import Transaction
 
 app = Flask(__name__)
 app.config.from_object(__name__)
@@ -86,6 +87,33 @@ def proxy_transfer(target_port):
     except Exception as e:
         print(e)
         return Response(status=400)
+
+
+# ATTACK SIMULATION
+@app.route('/proxy/double-spend/<port_list>', methods=['POST'])
+def forward_candidate_block(port_list):
+    ports = port_list.split('-')
+    last_block_clone = node.blockchain.blocks[-1]
+    dbl: Block = last_block_clone
+    dbl_tr = Transaction()
+    for _port in ports:
+        dbl_tr.create_input(1000, "", node.pub_key)
+        try:
+            target = [x for x in node.node_list if x['address'].split(":")[2] == _port][0]
+            signature = sign_message(str(dbl.as_json()), node.priv_key).decode('ISO-8859-1')
+            dbl_tr.create_output(10, target['pub_key'])
+            requests.post(f"{target['address']}/candidate-block", json={
+                "block": dbl.as_json(),
+                "signature": signature
+            }, headers={
+                'X-Pub-Key': base64.b64encode(node.pub_key.to_string()),
+                'Origin': node.address
+            })
+        except Exception as e:
+            print(e)
+            print(f"Nothing with port {port} found.")
+            return Response(status=400)
+    return Response(status=200)
 
 
 @app.route('/proxy/forward-message/<target_port>', methods=["GET"])
